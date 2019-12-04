@@ -703,14 +703,14 @@ def GLEAM(RA, DEC, fov, outdir, outname, projection='ZEA_regrid', \
         # I don't know why.
         def downloadlink(l):
 
-            with open(l.text, 'w') as f:
+            with open(l.text, 'wb') as f:
                 br.follow_link(l)
                 f.write(br.response().read())
 
         str_coords = "%f, %f" % (coords[0], coords[1])
 
-        logging.info('>>> Querying GLEAM for %s, %s at %s...' % \
-                     (coords[0], coords[1], b))
+        logging.info('Querying GLEAM for {:.2f}d, {:.2f}d at {}...'.format(
+                     coords[0], coords[1], b))
 
         br = Browser()
         br.set_handle_robots(False)
@@ -718,6 +718,8 @@ def GLEAM(RA, DEC, fov, outdir, outname, projection='ZEA_regrid', \
         if robust == -1:
             br.open('http://gleam-vo.icrar.org/gleam_postage/q/form')
         elif robust == 0:
+            # no longer available?
+            raise ValueError("no robust 0 image available.")
             # Requires username and password.
             br.add_password('http://gleam-vo.icrar.org/gleam_postage/q/form', \
                             robust0_uname, robust0_pword)
@@ -740,7 +742,7 @@ def GLEAM(RA, DEC, fov, outdir, outname, projection='ZEA_regrid', \
             result = br.submit()
             content = result.read()
 
-            with open('gleamer.html', 'w') as f:
+            with open('gleamer.html', 'wb') as f:
                 f.write(content)
 
             for link in br.links():
@@ -762,10 +764,10 @@ def GLEAM(RA, DEC, fov, outdir, outname, projection='ZEA_regrid', \
             os.remove(stamp_name)
             os.remove('gleamer.html')
 
-            logging.info('>>> GLEAM stamp acquired.')
+            logging.info('GLEAM stamp acquired.')
 
         except Exception:
-            logging.warn(">>>GLEAM stamp for band {0} not acquired. HTTP Error 504 most likely.".format(b))
+            logging.warn("GLEAM stamp for band {0} not acquired. HTTP Error 504 most likely.".format(b))
            
         
         br.close()
@@ -792,15 +794,15 @@ def GLEAM(RA, DEC, fov, outdir, outname, projection='ZEA_regrid', \
 
     # Make sure projection is valid:
     if projection not in ['ZEA', 'ZEA_regrid', 'SIN_regrid']:
-        raise ValueError('>>> GLEAM: projection must be one of ' \
+        raise ValueError('GLEAM: projection must be one of ' \
                          ' [`ZEA`, `ZEA_regrid`, `SIN_regrid`].')
     # Check to make sure the image won't be larger than 5.0 degrees:
     if float(fov) > 5.0:
-        logging.warning('>>> GLEAM: maximum size for GLEAM stamps is 5.0 degrees. \n'\
-                        '>>> GLEAM: setting size to 5.0 degrees.')
+        logging.warn('GLEAM: maximum size for GLEAM stamps is 5.0 degrees. \n'\
+                     'GLEAM: setting size to 5.0 degrees.')
     # Check to see if the requested image is actually in the GLEAM survey area.
     if dec > 30.0:
-        raise ValueError('>>> GLEAM: no good GLEAM data above +30 degrees.')
+        raise ValueError('GLEAM: no good GLEAM data above +30 degrees.')
 
     coords = (ra, dec)
 
@@ -811,14 +813,14 @@ def GLEAM(RA, DEC, fov, outdir, outname, projection='ZEA_regrid', \
             if b == 'white':
                 b = '170-231'
             if b not in gleam_bands:
-                raise ValueError('>>> GLEAM: %s is not a valid band.' % b)
+                raise ValueError('GLEAM: %s is not a valid band.' % b)
 
                 # Check to see if the stamp already exists:
             if os.path.exists(outdir+outname[:-5]+'_'+b+'.fits'):
-                if overwrite == 'r':
-                    logging.warn('>>> GLEAM: %s already exists. Passing.' % outname)
-                elif overwrite == 'w':
-                    logging.info('>>> GLEAM: %s already exists - overwriting.' \
+                if overwrite == 'r' or overwrite == False:
+                    logging.warn('GLEAM: %s already exists. Passing.' % outname)
+                elif overwrite == 'w' or overwrite == True:
+                    logging.info('GLEAM: %s already exists - overwriting.' \
                                  % outname)
                     os.remove(outdir+outname[:-5]+'_'+b+'.fits')    
 
@@ -864,7 +866,7 @@ def TGSS(RA, DEC, fov, outdir, outname, overwrite='r'):
 
     def downloadlink(l):
 
-        f = open(l.text, 'w')
+        f = open(l.text, 'wb')
         br.follow_link(l)
         f.write(br.response().read())
 
@@ -878,26 +880,26 @@ def TGSS(RA, DEC, fov, outdir, outname, overwrite='r'):
 
     # Check to see if the stamp already exists:
     if os.path.exists(outdir+'/'+outname+'.fits'):
-        if overwrite == 'r':
+        if overwrite == 'r' or overwrite == False:
             print('"'+outname+'" already exists.')
             return None
-        elif overwrite == 'w':
-            print('Existing "'+outname+'".fits will be overwritten.')
+        elif overwrite == 'w' or overwrite == True:
+            logging.info('Existing "'+outname+'".fits will be overwritten.')
             os.remove(outdir+'/'+outname+'.fits')
 
     if dec < -55.0:
-        raise ValueError('>>> TGSS: %f, %f is out of the TGSS survey area.' % \
+        raise ValueError('TGSS: %f, %f is out of the TGSS survey area.' % \
                          (ra, dec))
 
     # Check to make sure the image won't be larger than 1.0 degrees:
     if float(fov) > 1.0:
-        raise ValueError('>>> TGSS: Stamps size too big. Maximum size is 1 degree.')
+        raise ValueError('TGSS: Stamps size too big. Maximum size is 1 degree.')
 
     coords = '%f, %f' % (ra, dec)
 
     try:
 
-        logging.info('>>> Querying TGSS for %f, %f...' % (ra, dec))
+        logging.info('Querying TGSS for {:.2f}d, {:.2f}d...'.format(ra, dec))
 
         br = Browser()
 
@@ -917,7 +919,7 @@ def TGSS(RA, DEC, fov, outdir, outname, overwrite='r'):
         result = br.submit()
         content = result.read()
 
-        with open('tgss.html', 'w') as f:
+        with open('tgss.html', 'wb') as f:
             f.write(content)
 
         for link in br.links():
@@ -935,13 +937,13 @@ def TGSS(RA, DEC, fov, outdir, outname, overwrite='r'):
         os.remove(stamp_name)
         os.remove('tgss.html')
 
-        logging.info('>>> TGSS stamp acquired.')
+        logging.info('TGSS stamp acquired.')
 
     except Exception:
 
         if os.path.exists('tgss.html'):
             os.remove('tgss.html')
-        logging.warn('>>> TGSS: Something went wrong.')
+        logging.warn('TGSS: something went wrong.')
         with open('problem_stamps.txt', 'a+') as f:
             f.write('No stamp in TGSS for recovered for: \n')
             f.write('{0}\n'.format(outname))
@@ -1138,7 +1140,7 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
 
     def downloadlink(l):
 
-        f = open(l.text, 'w')
+        f = open(l.text, 'wb')
         br.follow_link(l)
         f.write(br.response().read())
 
@@ -1148,20 +1150,20 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
 
     # Check to see if the stamp already exists:
     if os.path.exists(outdir+'/'+outname+'.fits'):
-        if overwrite == 'r':
-            raise IOError('>>> NVSS: %s already exists.' % outname)
-        elif overwrite == 'w':
-            logging.info('>>> NVSS: Existing %s already exists - overwriting.' \
+        if overwrite == 'r' or overwrite == False:
+            raise IOError('NVSS: %s already exists.' % outname)
+        elif overwrite == 'w' or overwrite == True:
+            logging.info('NVSS: Existing %s already exists - overwriting.' \
                 % outname)
             os.remove(outdir+'/'+outname+'.fits')
 
     # Make sure projection is valid:
     if (fov <= 2.0) and (projection not in ['SIN', 'TAN', 'ARC', 'NCP', 'GLS', \
         'MER', 'AIT', 'STG']):
-        raise ValueError('>>> NVSS: %s is an invalid projection for NVSS at this size.' \
+        raise ValueError('NVSS: %s is an invalid projection for NVSS at this size.' \
                          % projection)
     elif (fov > 2.0) and (projection not in ["SIN", "TAN", "CAR", "AIT", "ZEA"]):
-        raise ValueError(">>> NVSS: %s is an invalid projection for NVSS stamps" \
+        raise ValueError("NVSS: %s is an invalid projection for NVSS stamps" \
                          " downloaded from SkyView." % projection)
 
     # Make sure the coordinates are in HMS, DMS format and in survey region:
@@ -1170,6 +1172,7 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
         ra, dec = dd_hms_dms(RA, DEC)
     except ValueError:
         ra, dec = RA, DEC
+        RA, DEC = hms_dms_dd(RA, DEC)
 
     if '-' or '+' in dec:
         DEC_limit = float(dec[0:3])
@@ -1177,28 +1180,27 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
         DEC_limit = float(dec[0:2])
 
     if DEC_limit < -40.0:
-        raise ValueError('>>> NVSS: %s, %s is out of the survey area.' \
+        raise ValueError('NVSS: %s, %s is out of the survey area.' \
                          % (ra, dec))
 
     # Check to make sure the image won't be larger than 2.0 degrees:
     if 2.0 < float(fov) <= 5.0:
-        logging.warn(">>> NVSS: Using SkyView for NVSS stamp.")
+        logging.warn("NVSS: Using SkyView for NVSS stamp.")
         skyview = True
     elif float(fov) > 5.0:
-        raise ValueError('>>> NVSS: maximum size for NVSS stamps is 5.0 degrees.')
+        raise ValueError('NVSS: maximum size for NVSS stamps is 5.0 degrees.')
     else:
         skyview = False
 
     if skyview:
-        raise ValueError(">>> NVSS: SkyView not currently supported.")
+        raise ValueError("NVSS: SkyView not currently supported.")
 
     if not outdir.endswith('/'): outdir += '/'
     if not os.path.exists(outdir): os.makedirs(outdir)
 
     try:
 
-        logging.info('>>> NVSS: querying postage stamp server for %s, %s...' \
-                     % (ra, dec))
+        logging.info('NVSS: querying postage stamp server for {:.2f}d, {:.2f}d...'.format(RA, DEC))
 
         radius = '%f, %f' % (fov, fov)
 
@@ -1227,7 +1229,7 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
             result = br.submit()
             content = result.read()
 
-            with open(outdir+outname+'.fits', 'w') as f:
+            with open(outdir+outname+'.fits', 'wb') as f:
                 f.write(content)
 
         else:
@@ -1256,7 +1258,7 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
             return None
             # content = result.read()
 
-            with open("skyview.html", "w") as f:
+            with open("skyview.html", "wb") as f:
                 f.write(content)
 
             for link in br.links():
@@ -1280,7 +1282,7 @@ def NVSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', fix=Tru
         # logging.warn('>>> NVSS: something went wrong.')
 
 
-def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
+def SUMSS(RA, DEC, fov, outdir, outname, projection='SIN', overwrite='r', \
     samedir=False):
     '''Function to download SUMSS postage stamp(s).
 
@@ -1310,7 +1312,7 @@ def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
 
     def downloadlink(l):
 
-        f = open(l.text, 'w')
+        f = open(l.text, 'wb')
         br.follow_link(l)
         f.write(br.response().read())
 
@@ -1324,25 +1326,26 @@ def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
 
     # Check to see if the stamp already exists:
     if os.path.exists(outdir+outname+'.fits'):
-        if overwrite == 'r':
+        if overwrite == 'r' or overwrite == False:
             raise IOError(outname+' already exists.')
-        elif overwrite == 'w':
-            print('Existing '+outname+' will be overwritten.')
+        elif overwrite == 'w' or overwrite == True:
+            logging.info('SUMSS: Existing '+outname+' will be overwritten.')
             os.remove(outdir+outname+'.fits')
 
     # Make sure projection is valid:
     if projection not in ['NCP', 'SIN', 'TAN', 'TAN', 'ARC', 'GLS', 'AIT', \
         'STG']:
         raise ValueError(\
-            '{0} is an invalid projection for SUMSS. \n' \
-            'Type help(SUMSS) for options.'.format(projection))
+            '{0} is an invalid projection for SUMSS. Type help(SUMSS)'
+            ' for options.'.format(projection))
 
     # Make sure the coordinates are in HMS, DMS format and in survey region:
     try:
         RA_test = float(RA)
         RA, DEC = dd_hms_dms(RA, DEC)
+        ra, dec = float(RA), float(DEC)
     except ValueError:
-        pass
+        ra, dec = hms_dms_dd(RA, DEC)
 
     if '-' or '+' in DEC:
         DEC_limit = float(DEC[0:3])
@@ -1355,15 +1358,16 @@ def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
             'No SUMSS data above DEC -30 degrees.'.format(RA, DEC, outname), DEC_limit)
 
     # Check to make sure the image won't be larger than 5.0 degrees:
-    if float(fov) > 5.0:
+    if float(fov) > 2.0:
         raise ValueError(\
             '{0} is too large for SUMSS: {1} \n' \
-            'SUMSS stamps cannot be larger than 5.0 '\
+            'SUMSS stamps cannot be larger than 2.0 (ish) '\
             'degrees.'.format(fov, outname))
 
     try:
 
-        print('Querying SUMSS...')
+        logging.info('Querying SUMSS for {:.2f}d, {:.2f}d ...'.format(
+            ra, dec))
         radius = str('{0} {0}'.format(fov, fov))
 
         br = Browser()
@@ -1385,7 +1389,7 @@ def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
         result = br.submit()
         content = result.read()
 
-        with open('sumss.html', 'w') as f:
+        with open('sumss.html', 'wb') as f:
             f.write(content)
 
         for link in br.links():
@@ -1407,7 +1411,7 @@ def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
         os.remove(stamp_name)
         os.remove('sumss.html')
 
-        print('SUMSS stamp acquired.')
+        logging.info('SUMSS stamp acquired.')
 
     except Exception:
         raise
@@ -1415,7 +1419,7 @@ def SUMSS(RA, DEC, fov, outdir, outname, projection='TAN', overwrite='r', \
         if os.path.exists('sumss.html'):
             os.remove('sumss.html')
         print('Something went wrong: '+outname+' is ' \
-            'probably out of the survey area.')
+              'probably out of the survey area.')
 
 
 def DSS2(RA, DEC, fov, outdir, outname, band='b', overwrite='r'):
@@ -1445,18 +1449,17 @@ def DSS2(RA, DEC, fov, outdir, outname, band='b', overwrite='r'):
 
     # Check to see if the stamp already exists:
     if os.path.exists(outdir+'/'+outname+'.fits'):
-        if overwrite == 'r':
-            print('"'+outname+'" already exists.')
+        if overwrite == 'r' or overwrite == False:
+            logging.info('"'+outname+'" already exists.')
             return None
-        elif overwrite == 'w':
-            print('>>> Existing "'+outname+'".fits will be overwritten.')
+        elif overwrite == 'w' or overwrite == True:
+            logging.info('Existing "'+outname+'".fits will be overwritten.')
             os.remove(outdir+'/'+outname+'.fits')
 
     # Check to make sure the image won't be larger than 1.0 degrees:
     if float(fov) > 1.0:
-        print('>>> {0} is too large for DSS2: "{1}" \n' \
-            '>>> DSS2 stamps cannot be larger than 1.0 \n' \
-            '>>> degrees.'.format(fov, outname))
+        raise ValueError('{0} is too large for DSS2 ({1}). DSS2 stamps cannot ' \
+                         'be larger than 1.0 degrees.'.format(fov, outname))
         return None
 
     # Determine which band to use (blue or red):
@@ -1470,12 +1473,11 @@ def DSS2(RA, DEC, fov, outdir, outname, band='b', overwrite='r'):
         band = 'poss2ukstu_ir'
         mess = 'infrared'
     else:
-        print('>>> DSS2 band must be "blue", "red", or "infrared".')
-        return None
+        raise ValueError('DSS2 band must be "blue", "red", or "infrared".')
 
     try:
 
-        print('>>> Querying DSS2...')
+        logging.info('Querying DSS2...')
 
         br = Browser()
 
@@ -1500,16 +1502,18 @@ def DSS2(RA, DEC, fov, outdir, outname, band='b', overwrite='r'):
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
-        with open(outdir+'/'+outname+'.fits', 'w') as f:
+        with open(outdir+'/'+outname+'.fits', 'wb') as f:
             f.write(content)
 
-        print('>>> DSS2 ' + mess + ' stamp acquired.')
+        logging.info('DSS2 ' + mess + ' stamp acquired.')
 
-    except Exception:
+    except Exception as e:
 
-        print(">>> Something went wrong. DSS2 covers most of the sky, so this \n" \
-            ">>> could be a connectivity problem or you are somewhere near the \n" \
-            ">>> galactic centre.")
+        print(e)
+        logging.info("Something went wrong. DSS2 covers most of the sky, so "
+                     "this could be a connectivity problem or you are "
+                     "somewhere near the galactic centre.")
         pass
+
 
     return None

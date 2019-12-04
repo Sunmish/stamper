@@ -87,10 +87,6 @@ def get_galex_results(coords, search_limit=2.0, verbose=True, flux=True):
 
 
 
-            # raise ValueError('>>> No results found with both NUV and FUV within' \
-            #                  '%f arcmin.' % search_limit)
-
-            print mNUV, mFUV, emNUV, emFUV
 
 
         if verbose:
@@ -293,7 +289,7 @@ def get_wise_mag(coords, verbose=True, flux=False, correct=True):
     except TypeError: ra, dec = coords[0], coords[1] 
 
     if verbose:
-        print 'Looking around {0}, {1}...'.format(ra, dec)
+        print('Looking around {0}, {1}...'.format(ra, dec))
 
     try:
 
@@ -324,7 +320,7 @@ def get_wise_mag(coords, verbose=True, flux=False, correct=True):
 
     if verbose:
         for i in range(0, 4):
-            print 'W{0} = {1} +/- {2}'.format(i+1, W[i], eW[i])
+            print('W{0} = {1} +/- {2}'.format(i+1, W[i], eW[i]))
 
     if flux:
 
@@ -364,7 +360,7 @@ def get_wise_mag(coords, verbose=True, flux=False, correct=True):
             elif m >= 2.5:
                 fc1, fc2, fc3, fc4 = 1.0283, 1.0206, 1.1344, 1.0142
 
-            if verbose: print 'SED is calculated to be F ~ v^{0}'.format(m)
+            if verbose: print('SED is calculated to be F ~ v^{0}'.format(m))
 
         else:
 
@@ -383,7 +379,7 @@ def get_wise_mag(coords, verbose=True, flux=False, correct=True):
 
         if verbose:
             for i in range(0, 4):
-                print 'F{0} = {1} +/- {2} [Jy]'.format(i+1, F[i], eF[i])
+                print('F{0} = {1} +/- {2} [Jy]'.format(i+1, F[i], eF[i]))
 
     else:
 

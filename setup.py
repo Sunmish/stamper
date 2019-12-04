@@ -19,6 +19,14 @@ reqs = [
     "mechanize",
 ]
 
+scripts = [
+    "scripts/get_dss.py",
+    "scripts/get_gleam.py",
+    "scripts/get_tgss.py",
+    "scripts/get_nvss.py",
+    "scripts/get_sumss.py"
+]
+
 
 setuptools.setup(
     name="stamper",
@@ -30,4 +38,5 @@ setuptools.setup(
     url="https://github.com/Sunmish/stamper",
     install_requires=reqs,
     packages=["stamper"],
+    scripts=scripts,
 )
